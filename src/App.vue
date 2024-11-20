@@ -1,5 +1,5 @@
 <template>
-  <h1>Погода в
+  <h1>{{ $t("weatherIn") }}
     <select name="City" id="City" @change="changeCoords($event)">
       <option value="RUS">Нижнем Тагиле</option>
       <option value="JPY">Токио</option>
@@ -8,19 +8,23 @@
       <option value="USD">Вашингтоне</option>
     </select>
     <select name="Grades" id="Grades" @change="changeGrades($event)">
-      <option value="metric">Цельсии</option>
-      <option value="imperial">Фаренгейты</option>
+      <option value="metric">{{ $t('tempUM.celsius') }}</option>
+      <option value="imperial">{{ $t('tempUM.fahrenheit') }}</option>
+    </select>
+    <select v-model="$i18n.locale">
+      <option value="ru">Ru</option>
+      <option value="en">En</option>
     </select>
   </h1>
-  <h3 v-if="!weather">Загрузка...</h3>
+  <h3 v-if="!weather">{{ $t("loading") }}...</h3>
   <div v-else>
     <img :src="`https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png`" alt="">
     <h2>{{ weather.weather[0].description }}</h2>
-    <h3>Время: {{ time }}</h3>
-    <h3>Сейчас {{ weather.main.temp }}°, ощущается как {{ weather.main.feels_like }}°</h3>
-    <h3>Давление: {{ weather.main.pressure }} мм рт. ст.</h3>
-    <h3>Влажность: {{ weather.main.humidity }}%</h3>
-    <h3>Ветер: {{ weather.wind.speed }} м/с, направление: {{ weather.wind.deg }}°</h3>
+    <h3>{{ $t("time") }}: {{ time }}</h3>
+    <h3>{{ $t('now') }} {{ weather.main.temp }}°, {{ $t('feelsLike') }} {{ weather.main.feels_like }}°</h3>
+    <h3>{{ $t('pressure') }}: {{ weather.main.pressure }} {{ $t("pressureUM") }}</h3>
+    <h3>{{ $t('humidity') }}: {{ weather.main.humidity }}%</h3>
+    <h3>{{ $t('wind') }}: {{ weather.wind.speed }} {{ $t('windSpeed') }}, {{ $t('windDirection') }}: {{ weather.wind.deg }}°</h3>
   </div>
   <div class="convert-valutes" v-if="currValute!=='RUS'">
     <label for="RUS">Рубли: </label>
@@ -69,7 +73,7 @@ export default {
       russianValuteVal: null,
       time: null,
       grades: 'metric',
-      coordinates: null
+      coordinates: "RUS"
     }
   },
   methods: {

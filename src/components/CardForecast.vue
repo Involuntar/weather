@@ -1,10 +1,10 @@
 <template>
     <div class="forecast-elem">
             <img :src="`https://openweathermap.org/img/wn/${forecast.weather[0].icon}@2x.png`" alt="">
-            <p>{{ forecast.main.temp }}°C, ощущается как {{ forecast.main.feels_like }}°C</p>
-            <p>Давление: {{ forecast.main.pressure }} мм рт. ст.</p>
-            <p>Влажность: {{ forecast.main.humidity }}%</p>
-            <p>Ветер: {{ forecast.wind.speed }} м/с, направление: {{ forecast.wind.deg }}°</p>
+            <p>{{ forecast.main.temp }}°C, {{ $t('feelsLike') }} {{ forecast.main.feels_like }}°C</p>
+            <p>{{ $t('pressure') }}: {{ forecast.main.pressure }} мм рт. ст.</p>
+            <p>{{ $t('humidity') }}: {{ forecast.main.humidity }}%</p>
+            <p>{{ $t('wind') }}: {{ forecast.wind.speed }} {{ $t('windSpeed') }}, {{ $t('windDirection') }}: {{ forecast.wind.deg }}°</p>
             <p> {{ forecast.dt_txt.slice(8, 10) }}.{{ forecast.dt_txt.slice(5, 7) }} {{ forecast.dt_txt.slice(-8, -3) }}</p>
     </div>
 </template>
