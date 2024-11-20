@@ -1,12 +1,15 @@
 <template>
   <h1>{{ $t("weatherIn") }}
     <select name="City" id="City" @change="changeCoords($event)">
-      <option value="RUS">Нижнем Тагиле</option>
-      <option value="JPY">Токио</option>
-      <option value="CNY">Пекине</option>
-      <option value="GBP">Лондоне</option>
-      <option value="USD">Вашингтоне</option>
+      <option value="N-Tagil">Нижнем Тагиле</option>
+      <option value="Tokyo">Токио</option>
+      <option value="Pekin">Пекине</option>
+      <option value="London">Лондоне</option>
+      <option value="Washington">Вашингтоне</option>
     </select>
+    <button class="favourite button" @click="addFav">
+      ❤️
+    </button>
     <select name="Grades" id="Grades" @change="changeGrades($event)">
       <option value="metric">{{ $t('tempUM.celsius') }}</option>
       <option value="imperial">{{ $t('tempUM.fahrenheit') }}</option>
@@ -16,6 +19,12 @@
       <option value="en">En</option>
     </select>
   </h1>
+  <ul class="favourites ul">
+    <li v-for="(item, key) in favourites" :key="key" @click="getCity(key)">
+      {{ key }}
+      <button class="remove__city button" @click="removeFav(key)">X</button>
+    </li>
+  </ul>
   <h3 v-if="!weather">{{ $t("loading") }}...</h3>
   <div v-else>
     <img :src="`https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png`" alt="">
@@ -62,6 +71,17 @@ export default {
     .then(json => {
       this.valute = json;
     });
+    this.favourites = this.itemsFromLocalStorage;
+  },
+  computed: { 
+    itemsFromLocalStorage() { 
+      return JSON.parse(localStorage.getItem('favCity') || '{}'); 
+    }, 
+  },
+  watch: { 
+    favourites(newItems) { 
+      localStorage.setItem('favCity', JSON.stringify(newItems)); 
+    },  
   },
   data() {
     return {
@@ -73,44 +93,60 @@ export default {
       russianValuteVal: null,
       time: null,
       grades: 'metric',
-      coordinates: "RUS"
+      coordinates: {
+        "N-Tagil": [57.9108371, 59.9715384],
+        "Tokyo": [35.6895, 139.692],
+        "Pekin": [39.916668, 116.383331],
+        "London": [51.509865, -0.118092],
+        "Washington": [38.889805, -77.009056]
+      },
+      curCity: 'N-Tagil',
+      favourites: {}
     }
   },
   methods: {
+    addFav(){
+      var key = this.curCity;
+      this.favourites[key] = this.coordinates[key];
+      localStorage.favCity = JSON.stringify(this.favourites);
+    },
+    removeFav(key) {
+      delete this.favourites[key]; 
+    }, 
     changeGrades(grades) {
       this.grades = grades.target.value;
-      this.getCity(this.coordinates);
+      this.getCity(this.curCity);
     },
     changeCoords(city) {
-      this.coordinates = city.target.value;
-      this.getCity(this.coordinates);
+      this.curCity = city.target.value;
+      this.getCity(this.curCity);
     },
     getCity(city) {
       this.russianValuteVal = null;
       this.foreignValuteVal = null;
       switch (city) {
-        case "RUS":
-          this.changeCity(57.9108371, 59.9715384);
+        case "N-Tagil":
+          this.changeCity(this.coordinates[city][0], this.coordinates[city][1]);
           this.currValute = 'RUS';
 
           break;
-        case "JPY":
-          this.changeCity(35.6895, 139.692);
+        case "Tokyo":
+          this.changeCity(this.coordinates[city][0], this.coordinates[city][1]);
           this.currValute = 'JPY';
 
           break;
-        case "CNY":
-          this.changeCity(39.916668, 116.383331);
+        case "Pekin":
+          this.changeCity(this.coordinates[city][0], this.coordinates[city][1]);
           this.currValute = 'CNY';
 
           break;
-        case "GBP":
-          this.changeCity(51.509865, -0.118092);
+        case "London":
+          this.changeCity(this.coordinates[city][0], this.coordinates[city][1]);
           this.currValute = 'GBP';
 
           break;
-        case "USD":
-          this.changeCity(38.889805, -77.009056);
+        case "Washington":
+          this.changeCity(this.coordinates[city][0], this.coordinates[city][1]);
           this.currValute = 'USD';
 
           break;
@@ -157,6 +193,28 @@ select {
 
 select {
   font-size: xx-large;
+}
+
+.favourite.button {
+  width: 45px;
+  height: 45px;
+}
+
+.favourites.ul {
+  padding: 0;
+  width: 200px;
+  margin: 0 auto;
+}
+
+.favourites.ul li {
+  display: flex;
+  justify-content: space-between;
+  background-color: grey;
+  margin: 5px 0;
+  color: #FFF;
+  cursor: pointer;
+  list-style: none;
+  text-align: left;
 }
 
 .convert-valutes {
