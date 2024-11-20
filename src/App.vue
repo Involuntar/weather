@@ -1,26 +1,169 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js App"/>
+  <h1>Погода в
+    <select name="City" id="City" @change="changeCoords($event)">
+      <option value="RUS">Нижнем Тагиле</option>
+      <option value="JPY">Токио</option>
+      <option value="CNY">Пекине</option>
+      <option value="GBP">Лондоне</option>
+      <option value="USD">Вашингтоне</option>
+    </select>
+    <select name="Grades" id="Grades" @change="changeGrades($event)">
+      <option value="metric">Цельсии</option>
+      <option value="imperial">Фаренгейты</option>
+    </select>
+  </h1>
+  <h3 v-if="!weather">Загрузка...</h3>
+  <div v-else>
+    <img :src="`https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png`" alt="">
+    <h2>{{ weather.weather[0].description }}</h2>
+    <h3>Время: {{ time }}</h3>
+    <h3>Сейчас {{ weather.main.temp }}°, ощущается как {{ weather.main.feels_like }}°</h3>
+    <h3>Давление: {{ weather.main.pressure }} мм рт. ст.</h3>
+    <h3>Влажность: {{ weather.main.humidity }}%</h3>
+    <h3>Ветер: {{ weather.wind.speed }} м/с, направление: {{ weather.wind.deg }}°</h3>
+  </div>
+  <div class="convert-valutes" v-if="currValute!=='RUS'">
+    <label for="RUS">Рубли: </label>
+    <input type="number" id="rub" placeholder="RUS" v-model="russianValuteVal" @input="convertRubs">
+    <br>
+    <label for="another-vaute">{{ currValute }}: </label>
+    <input type="number" id="another-valute" :placeholder="currValute" v-model="foreignValuteVal" @input="convertForeign">
+  </div>
+  <WeatherForeCast :forecast="weatherForeCast" />
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import WeatherForeCast from './components/WeatherForecast.vue';
 
 export default {
   name: 'App',
   components: {
-    HelloWorld
-  }
+    WeatherForeCast
+  },
+  mounted() {
+    fetch("https://api.openweathermap.org/data/2.5/weather?lat=57.9108371&lon=59.9715384&appid=0b48dc9464e4dd154dc21fd44f9f39b1&units=metric&lang=ru")
+    .then(resp => resp.json())
+    .then(json => {
+      this.weather = json;
+      let timestamp = new Date(this.weather.dt * 1000);
+      this.time = timestamp.getHours() + ":" + ("0" + timestamp.getMinutes()).substr(-2);
+    });
+    fetch("https://api.openweathermap.org/data/2.5/forecast?lat=57.9108371&lon=59.9715384&appid=0b48dc9464e4dd154dc21fd44f9f39b1&units=metric&lang=ru")
+    .then(resp => resp.json())
+    .then(json => {
+      this.weatherForeCast = json.list;
+    });
+    fetch('http://127.0.0.1:8081/24/10/2024')
+    .then(resp => resp.json())
+    .then(json => {
+      this.valute = json;
+    });
+  },
+  data() {
+    return {
+      weather: null,
+      weatherForeCast: [],
+      valute: null,
+      currValute: 'RUS',
+      foreignValuteVal: null,
+      russianValuteVal: null,
+      time: null,
+      grades: 'metric',
+      coordinates: null
+    }
+  },
+  methods: {
+    changeGrades(grades) {
+      this.grades = grades.target.value;
+      this.getCity(this.coordinates);
+    },
+    changeCoords(city) {
+      this.coordinates = city.target.value;
+      this.getCity(this.coordinates);
+    },
+    getCity(city) {
+      this.russianValuteVal = null;
+      this.foreignValuteVal = null;
+      switch (city) {
+        case "RUS":
+          this.changeCity(57.9108371, 59.9715384);
+          this.currValute = 'RUS';
+
+          break;
+        case "JPY":
+          this.changeCity(35.6895, 139.692);
+          this.currValute = 'JPY';
+
+          break;
+        case "CNY":
+          this.changeCity(39.916668, 116.383331);
+          this.currValute = 'CNY';
+
+          break;
+        case "GBP":
+          this.changeCity(51.509865, -0.118092);
+          this.currValute = 'GBP';
+
+          break;
+        case "USD":
+          this.changeCity(38.889805, -77.009056);
+          this.currValute = 'USD';
+
+          break;
+      }
+    },
+    changeCity(lat, lon) {
+      fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=0b48dc9464e4dd154dc21fd44f9f39b1&units=${this.grades}&lang=ru`)
+      .then(resp => resp.json())
+      .then(json => {
+        this.weather = json;
+        let timestamp = new Date(this.weather.dt * 1000);
+        this.time = timestamp.getHours() + ":" + ("0" + timestamp.getMinutes()).substr(-2);
+      });
+      fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=0b48dc9464e4dd154dc21fd44f9f39b1&units=${this.grades}&lang=ru`)
+      .then(resp => resp.json())
+      .then(json => {
+        this.weatherForeCast = json.list;
+      });
+    },
+    convertRubs() {
+      let value = parseFloat(this.valute[this.currValute].Value);
+      let nominal = parseFloat(this.valute[this.currValute].Nominal);
+      this.foreignValuteVal = (this.russianValuteVal / (value / nominal)).toFixed(2);
+    },
+    convertForeign() {
+      let value = parseFloat(this.valute[this.currValute].Value);
+      let nominal = parseFloat(this.valute[this.currValute].Nominal);
+      this.russianValuteVal = (this.foreignValuteVal * (value / nominal)).toFixed(2);
+    }
+  },
 }
 </script>
 
 <style>
-#app {
+#app,
+select {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
+}
+
+select {
+  font-size: xx-large;
+}
+
+.convert-valutes {
+  display: flex;
+  flex-wrap: wrap;
+  text-align: left;
+  width: min-content;
+  margin: 0 auto;
+}
+
+.convert-valutes input {
+  justify-self: right;
 }
 </style>
